@@ -1,8 +1,14 @@
+package main;
+
 import aima.search.framework.Problem;
 import aima.search.framework.Search;
 import aima.search.framework.SearchAgent;
 import aima.search.informed.HillClimbingSearch;
 import aima.search.informed.SimulatedAnnealingSearch;
+import redsensores.RedBoard;
+import redsensores.RedGoalTest;
+import redsensores.RedHeuristicFunction;
+import redsensores.RedSuccesorFunction;
 
 import java.util.Iterator;
 import java.util.List;
@@ -11,16 +17,16 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) throws Exception{
-        PracIABoard board =new PracIABoard(30, 2);
+        RedBoard board =new RedBoard(30, 2);
         TSPHillClimbingSearch(board);
         TSPSimulatedAnnealingSearch(board);
 
     }
 
-    private static void TSPHillClimbingSearch(PracIABoard board) {
+    private static void TSPHillClimbingSearch(RedBoard board) {
         System.out.println("\nTSP HillClimbing  -->");
         try {
-            Problem problem =  new Problem(board, new PracIASuccesorFunction(), new PracIAGoalTest(),new PracIAHeuristicFunction());
+            Problem problem =  new Problem(board, new RedSuccesorFunction(), new RedGoalTest(),new RedHeuristicFunction());
             Search search =  new HillClimbingSearch();
             SearchAgent agent = new SearchAgent(problem,search);
 
@@ -32,10 +38,10 @@ public class Main {
         }
     }
 
-    private static void TSPSimulatedAnnealingSearch(PracIABoard board) {
+    private static void TSPSimulatedAnnealingSearch(RedBoard board) {
         System.out.println("\nTSP Simulated Annealing  -->");
         try {
-            Problem problem =  new Problem(board,new PracIASuccesorFunction(), new PracIAGoalTest(),new PracIAHeuristicFunction());
+            Problem problem =  new Problem(board,new RedSuccesorFunction(), new RedGoalTest(),new RedHeuristicFunction());
             SimulatedAnnealingSearch search =  new SimulatedAnnealingSearch(2000,100,5,0.001);
             //search.traceOn();
             SearchAgent agent = new SearchAgent(problem,search);
@@ -59,8 +65,8 @@ public class Main {
     }
 
     private static void printActions(List actions) {
-        for (int i = 0; i < actions.size(); i++) {
-            String action = (String) actions.get(i);
+        for (Object o : actions) {
+            String action = (String) o;
             System.out.println(action);
         }
     }

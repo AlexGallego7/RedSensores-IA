@@ -1,3 +1,5 @@
+package redsensores;
+
 import IA.Red.Centro;
 import IA.Red.CentrosDatos;
 import IA.Red.Sensor;
@@ -9,14 +11,14 @@ import static java.lang.Math.sqrt;
 import static java.lang.Math.pow;
 
 
-public class PracIABoard {
+public class RedBoard {
 
     private HashMap<Sensor, Double> init;
 
     private Sensores sens;
     private CentrosDatos cds;
 
-    public PracIABoard(int nsens, int ncds) {
+    public RedBoard(int nsens, int ncds) {
 
         sens = new Sensores(nsens, 1);
         cds = new CentrosDatos(ncds, 1);

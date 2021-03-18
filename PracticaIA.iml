@@ -10,7 +10,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/Desktop/RedSensores/redsensores.jar!/" />
+          <root url="jar://$MODULE_DIR$/src/lib/AIMA.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />
@@ -19,7 +19,7 @@
     <orderEntry type="module-library" exported="">
       <library>
         <CLASSES>
-          <root url="jar://$USER_HOME$/Desktop/dist/AIMA.jar!/" />
+          <root url="jar://$MODULE_DIR$/src/lib/redsensores.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

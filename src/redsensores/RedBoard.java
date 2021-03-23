@@ -13,26 +13,47 @@ import static java.lang.Math.sqrt;
 
 public class RedBoard {
 
-    // <Sensor origen, <sensor destino, coste>
-
-    private final HashMap<Integer, Pair> init;
-
     private static Sensores sens;
     private static CentrosDatos cds;
 
-    public RedBoard(int nsens, int ncds) {
+    // Cantidad de información transmitida
+    private int total_data;
+
+    // <Sensor origen, <sensor destino, coste>
+    private HashMap<Integer, Pair> init;
+
+    //Posibles representaciones del estado, discutir mañana.
+
+    // cada valor del indice es el indice del sensor receptor.
+    private int[] sensors_transfer;
+
+    // Index = index de CentroDatos cds, valor de cada indice son el numero de sensores conectados al centro de dato
+    private int[] data_centers;
+
+    //juntar los dos anteriores i añadir este:
+
+
+    public RedBoard(int nsens, int ncds, int seed, int option) {
+
+        sens = new Sensores(nsens, seed);
+        cds = new CentrosDatos(ncds, seed);
+
+        init = new HashMap<>();
+
+        if (option == 1) {
+            initial_solution_1();
+        } else {
+            initial_solution_2();
+        }
+    }
+
+    private void initial_solution_1(){
 
         // SOLUCION INICIAL
 
-        /*
+        // 1 -> Cada sensor transmite su información a su centro mas cercano.
 
-            1 -> Cada sensor transmite su información a su centro mas cercano.
-
-         */
-
-        init = new HashMap<>();
-        sens = new Sensores(nsens, 1);
-        cds = new CentrosDatos(ncds, 1);
+        //mirar las restricciones
 
         for(int j = 1; j <= sens.size(); ++j) {
             double min = Integer.MAX_VALUE;
@@ -51,7 +72,11 @@ public class RedBoard {
         }
     }
 
-    public void next_sensor(int i) {
+    private void initial_solution_2() {
+    }
+
+    // Operadores
+    public void next_sensor(int i) { // Evitar ciclos
         Sensor s = sens.get(i);
         Double cost = (Double) init.get(i).getSecond();
         int n = -1;

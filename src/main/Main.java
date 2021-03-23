@@ -14,7 +14,7 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) throws Exception{
-        RedBoard board =new RedBoard(30, 4);
+        RedBoard board =new RedBoard(30, 4, 1, 1);
         System.out.println(board);
         /*TSPHillClimbingSearch(board);
         TSPSimulatedAnnealingSearch(board);*/

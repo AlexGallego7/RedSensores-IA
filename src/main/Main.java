@@ -17,9 +17,10 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) throws Exception{
-        RedBoard board =new RedBoard(30, 2);
-        TSPHillClimbingSearch(board);
-        TSPSimulatedAnnealingSearch(board);
+        RedBoard board =new RedBoard(30, 4);
+        System.out.println(board.toString());
+        /*TSPHillClimbingSearch(board);
+        TSPSimulatedAnnealingSearch(board);*/
 
     }
 
@@ -55,9 +56,8 @@ public class Main {
     }
 
     private static void printInstrumentation(Properties properties) {
-        Iterator keys = properties.keySet().iterator();
-        while (keys.hasNext()) {
-            String key = (String) keys.next();
+        for (Object o : properties.keySet()) {
+            String key = (String) o;
             String property = properties.getProperty(key);
             System.out.println(key + " : " + property);
         }

@@ -40,10 +40,27 @@ public class RedState {
     // Index = index de CentroDatos cds, valor de cada indice son el numero de sensores conectados al centro de dato
     private int[] centers_connections;
 
+    private int[][] sparse_matrix;
+
+
+    /*
+
+        S1  S2  S3  S4  C1  C2
+    S1  0   1   0   0   0   0
+    S2  ...
+    S3
+    S4
+    C1
+    C2
+     */
+
     public RedState(int nsens, int ncds, int seed, int option) {
 
         sens = new Sensores(nsens, seed);
         cds = new CentrosDatos(ncds, seed);
+
+        sparse_matrix = new int[sens.size()+cds.size()][sens.size()+cds.size()];
+
 
         total_data = 0;
         total_cost = 0;
@@ -70,25 +87,28 @@ public class RedState {
 
         // SOLUCION INICIAL
 
-        // 1 -> Cada sensor transmite su información a su centro mas cercano.
+        // 1 -> Cada sensor transmite su información a su centro con menos coste.
 
         //mirar las restricciones
 
-        /*for(int j = 1; j <= sens.size(); ++j) {
-            double min = Integer.MAX_VALUE;
-            double cost = Double.MAX_VALUE;
+        for(int i = 0; i < sens.size(); ++i) {
+            double min = Double.MAX_VALUE;
+            double _cost = Double.MAX_VALUE;
             int n = -1;
-            for(int i = 1; i <= cds.size(); ++i) {
-                double dist = distance(sens.get(j-1).getCoordX(), sens.get(j-1).getCoordY(),
-                        cds.get(i-1).getCoordX(), cds.get(i-1).getCoordY());
-                if(dist < min) {
-                    min = dist;
-                    cost = cost(dist, sens.get(j-1).getCapacidad());
-                    n = i;
+            for(int j = 0; j < cds.size(); ++j) {
+                double dist = distance(sens.get(i).getCoordX(), sens.get(i).getCoordY(),
+                        cds.get(j).getCoordX(), cds.get(j).getCoordY());
+                _cost = cost(dist, sens.get(i).getCapacidad());
+
+                if(_cost < min) {
+                    min = _cost;
+                    n = j;
                 }
             }
-            //init.put(j, new Pair(n, cost));
-        }*/
+            total_cost += _cost;
+            total_data += sens.get(i).getCapacidad();
+            sparse_matrix[i][n+sens.size()] = 1; sparse_matrix[n+sens.size()][i] = 1;
+        }
     }
 
     private void initial_solution_2() {
@@ -163,7 +183,7 @@ public class RedState {
     public Double cost(double distance, double data) {
         return pow(distance, 2) * data;
     }
-
+/*
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
@@ -176,6 +196,61 @@ public class RedState {
 
         s.append("Coste total: " + total_cost + ")\n");
         s.append("Datos transferidos: " + total_data + ")\n");
+        return s.toString();
+    }*/
+/*
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+
+        for(int i = 0; i < sparse_matrix.length; ++i) {
+            int n = -1;
+            String type = "";
+            for(int j = 0; j < sparse_matrix.length; ++j) {
+                if(sparse_matrix[i][j] == 1) {
+                    n = j;
+                    if(n >= sens.size())
+                        type = "Centro de Datos ";
+                    else
+                        type = "Sensor ";
+                }
+            }
+            s.append("Sensor " + i + ": (Receptor: " + type + " " + n + ")\n");
+
+        }
+        s.append("Coste total: " + total_cost + ")\n");
+        s.append("Datos transferidos: " + total_data + ")\n");
+        return s.toString();
+    }
+*/
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+
+        s.append("  ");
+        for(int i = 0; i < sens.size(); ++i)
+            s.append("S"+i+" ");
+        for(int j = 0; j < cds.size(); ++j)
+            s.append("C"+j+" ");
+
+        s.append("\n");
+
+        int k = 0;
+
+        for(int i = 0; i < sparse_matrix.length; ++i) {
+            if(i < sens.size())
+                s.append("S"+i+" ");
+            else {
+                s.append("C" + k + " ");
+                k++;
+            }
+            for(int j = 0; j < sparse_matrix.length; ++j) {
+                s.append(sparse_matrix[i][j] + "  ");
+            }
+            s.append("\n");
+        }
+        s.append("Coste total: " + total_cost + "\n");
+        s.append("Datos transferidos: " + total_data + "\n");
         return s.toString();
     }
 }

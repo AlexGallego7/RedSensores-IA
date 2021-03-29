@@ -41,10 +41,13 @@ public class RedBoard {
         init = new HashMap<>();
 
         if (option == 1) {
-            initial_solution_1();
+            initial_solution_x();
         } else {
             initial_solution_2();
         }
+    }
+
+    private void initial_solution_x() {
     }
 
     private void initial_solution_1(){
@@ -115,4 +118,5 @@ public class RedBoard {
         }
         return s.toString();
     }
+
 }

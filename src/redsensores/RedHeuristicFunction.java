@@ -7,6 +7,6 @@ public class RedHeuristicFunction implements HeuristicFunction {
     public double getHeuristicValue(Object state) {
         RedState board = (RedState) state;
 
-        return board.recalcular_cost() - board.recalcular_data();
+        return board.recalculate_cost() - board.recalculate_data();
     }
 }

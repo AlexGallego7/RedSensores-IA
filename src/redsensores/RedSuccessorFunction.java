@@ -18,10 +18,6 @@ public class RedSuccessorFunction implements SuccessorFunction {
             for (int j = i + 1; j < board.getSens().size(); j++) {
                 RedState newBoard = new RedState(board);
 
-                System.out.println("-----AVANS DEL SWAP------");
-
-                System.out.println(newBoard.toString());
-
                 newBoard.swap_connections(i, j);
 
                 if (newBoard.isGDA()) {

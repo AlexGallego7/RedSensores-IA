@@ -14,8 +14,7 @@ public class RedState {
     private static Sensores sens;
     private static CentrosDatos cds;
 
-        /*
-
+    /*
         S1  S2  S3  S4  C1  C2
     S1  0   1   0   0   0   0
     S2  ...
@@ -51,8 +50,11 @@ public class RedState {
         sens = oldState.getSens();
         cds = oldState.getCds();
 
-        sparse_matrix = oldState.getSparse_matrix();
-        connections = oldState.getConnections();
+        sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
+        for(int i = 0; i < sens.size(); ++i){
+            sparse_matrix[i] = oldState.sparse_matrix[i].clone();
+        }
+        connections = oldState.getConnections().clone();
 
     }
 

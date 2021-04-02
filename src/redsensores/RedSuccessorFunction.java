@@ -34,7 +34,6 @@ public class RedSuccessorFunction implements SuccessorFunction {
                 }
             }
         }
-
         return retVal;
     }
 }

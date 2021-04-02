@@ -3,6 +3,7 @@ package redsensores;
 import IA.Red.CentrosDatos;
 import IA.Red.Sensores;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import static java.lang.Math.pow;
@@ -13,6 +14,7 @@ public class RedState {
 
     private static Sensores sens;
     private static CentrosDatos cds;
+    private static int[] SortedByDist;
 
         /*
 
@@ -27,6 +29,7 @@ public class RedState {
 
     private int[] connections;
 
+
     // Cantidad de información transmitida
     private double total_data;
 
@@ -39,22 +42,31 @@ public class RedState {
 
         connections = new int[sens.size()];
 
-        if (option == 1) {
-            initial_solution_1();
-        } else {
-            initial_solution_2();
+        switch (option){
+            case 1:
+                initial_solution_1();
+                break;
+            case 2:
+                initial_solution_2();
+                break;
+            case 3:
+                initial_solution_3();
+                break;
+            default:
+                initial_solution_1();
         }
+
     }
 
     public RedState(RedState oldState) {
 
         sens = oldState.getSens();
         cds = oldState.getCds();
-
-        sparse_matrix = oldState.getSparse_matrix();
-        connections = oldState.getConnections();
-
+        sparse_matrix = oldState.getSparse_matrix().clone();
+        connections = oldState.getConnections().clone();
     }
+
+
 
     private void initial_solution_1() {
 
@@ -85,10 +97,10 @@ public class RedState {
                 connections[i] = sens.size() + n;
             }
         }
+
     }
 
     private void initial_solution_2() {
-
         int nsens = sens.size();
         for (int i = 0; i < nsens; ++i) {
             boolean collocated = false;
@@ -107,6 +119,15 @@ public class RedState {
         }
     }
 
+    //cada sensor envia a su punto mas cercano available, assegurando el GDA y que todas las conexiones llegan a un centro
+    private void initial_solution_3(){
+
+        SortedByDist =  new int[sens.size() + cds.size()];
+        fillSorted();
+        return;
+    }
+
+
     // Operadores
 
     // PRE: i & j < sens.size()
@@ -124,6 +145,69 @@ public class RedState {
 
         sparse_matrix[j][targetJ] = 0;
         sparse_matrix[j][targetI] = (int) sens.get(j).getCapacidad();
+    }
+
+// otras funciones
+
+
+    private void fillSorted(){
+        Boolean visited[] = new Boolean[sens.size() + cds.size()];
+        Arrays.fill(visited,false);
+
+        int[] coords = new int[2];
+        SortedByDist[0] = findClosestAvailable(0,0,visited);
+        visited[SortedByDist[0]] = true;
+
+        for(int i = 1; i < sens.size() + cds.size();++i){
+            coords = getElemCoords(coords[0],coords[1],i);
+            SortedByDist[i] = findClosestAvailable(coords[0],coords[1],visited);
+            visited[SortedByDist[i]] = true;
+        }
+    }
+
+    private int[] getElemCoords(int x, int y, int elem){//pone en x e y las coordenadas del elmento, sea sens o cds.
+        int[] coords = new int[2];
+        if(isSensor(elem)){
+            x = sens.get(elem).getCoordX();
+            y = sens.get(elem).getCoordY();
+        }else {
+            x = cds.get(elem - sens.size()).getCoordX();
+            y = cds.get(elem - sens.size()).getCoordY();
+        }
+         coords[0] = x;
+        coords[1] = y;
+        return coords;
+    }
+
+    private int findClosestAvailable(int x, int y, Boolean visited[]){//dadas unas coordenadas, retorna el elemento mas cercano i free
+                                                    // en caso de no haber elementos free, debuelve -1
+        double dist = Double.MAX_VALUE;
+        double min = Double.MAX_VALUE;
+        int elem = -1;
+        int[] coords = new int[2];
+        for (int i = 0; i < sens.size() + cds.size(); ++i){
+            if (!visited[i]) { // and isAvailable
+                coords = getElemCoords(coords[0], coords[1], i);
+                dist = distance(x, y, coords[0], coords[1]);
+                if (dist < min) {
+                    min = dist;
+                    elem = i; //// mejor elem hasta ahora
+                }
+            }
+
+        }
+        return elem;
+    }
+
+    private Boolean isSensor(int elem){//true => is Sesnor || false => is Center
+        if(elem < sens.size()) return true;
+        return false;
+    }
+
+
+    private boolean isAvailabe(int elem){
+        if(isSensor(elem)) return sensorIsFree(elem);
+        return centerIsFree(elem - sens.size());
     }
 
     private boolean centerIsFree(int j) {
@@ -145,7 +229,11 @@ public class RedState {
     }
 
     public boolean isGDA() {
+        //si no hay perdida de datos seguro que no hay ciclos
+        if(recalculate_data() - data_recived() == 0)  return true;
+
         return true;
+
     }
 
     public double distance(int x1, int y1, int x2, int y2) {
@@ -184,6 +272,15 @@ public class RedState {
             data += Arrays.stream(sparse_matrix[i]).sum();
         }
         total_data = data;
+        return data;
+    }
+    public double data_recived(){//los datos recividos por los centros
+        double data = 0;
+        for (int i = sens.size(); i < sparse_matrix[0].length; ++i){
+            for(int j = 0; j < sparse_matrix.length; ++j){
+                data += sparse_matrix[j][i];
+            }
+        }
         return data;
     }
 
@@ -229,11 +326,14 @@ public class RedState {
         s.append("Connection map: ");
         for (int i = 0; i < connections.length; ++i) {
             s.append("S" + i + " -> " + connections[i]);
-            if (i < connections.length-1) s.append(", ");
+            if (i < connections.length - 1) s.append(", ");
         }
         s.append("\n");
         s.append("Coste total: " + recalculate_cost() + "\n");
         s.append("Datos transferidos: " + recalculate_data() + "\n");
+        s.append("datos perdidos: " + (recalculate_data() - data_recived()) + "\n");
+
+
         return s.toString();
     }
 }

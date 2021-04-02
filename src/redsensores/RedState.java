@@ -4,6 +4,7 @@ import IA.Red.CentrosDatos;
 import IA.Red.Sensores;
 
 import java.util.Arrays;
+import java.util.Random;
 
 import static java.lang.Math.pow;
 import static java.lang.Math.sqrt;
@@ -39,9 +40,11 @@ public class RedState {
         connections = new int[sens.size()];
 
         if (option == 1) {
-            initial_solution_1();
+            initial_solution_easy();
+        } else if (option == 2) {
+            initial_solution_4in4();
         } else {
-            initial_solution_2();
+            initial_solution_1();
         }
     }
 
@@ -51,11 +54,74 @@ public class RedState {
         cds = oldState.getCds();
 
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
-        for(int i = 0; i < sens.size(); ++i){
+        for (int i = 0; i < sens.size(); ++i) {
             sparse_matrix[i] = oldState.sparse_matrix[i].clone();
         }
         connections = oldState.getConnections().clone();
 
+    }
+
+    private void initial_solution_easy() {
+
+        //llenar al el primer centro, luego el siguente. SI TODOS los centros estan llenos, EL SENSOR sin ser assignado LE ENVIARA AL PRIMER SENSOR que este llibre
+
+        int nsens = sens.size();
+        for (int i = 0; i < nsens; ++i) {
+            boolean collocated = false;
+            for (int j = 0; !collocated && j < cds.size(); ++j) {
+                if (centerIsFree(j)) {
+                    total_data += sens.get(i).getCapacidad();
+                    sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
+                    connections[i] = sens.size() + j;
+
+                    collocated = true;
+                }
+            }
+            if (!collocated) {
+                for (int j = 0; j < sens.size() && !collocated; ++j) {
+                    if (sensorIsFree(j) && j != i) {
+                        sparse_matrix[i][j] = (int) sens.get(i).getCapacidad();
+                        connections[i] = j;
+                        collocated = true;
+                    }
+                }
+            }
+        }
+    }
+
+    private void initial_solution_4in4() {
+        boolean fi = false;
+        for (int i = 0; i < sens.size() && !fi; i += 4) {
+            boolean collocated = false;
+            for (int j = 0; !collocated && j < cds.size(); ++j) {
+                if (centerIsFree(j)) {
+                    total_data += sens.get(i).getCapacidad();
+                    sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
+                    connections[i] = sens.size() + j;
+
+                    collocated = true;
+                }
+            }
+            if (!collocated) {
+                fi = true;
+                for (int k = i; k < sens.size(); ++k) {
+                    collocated = false;
+                    for (int j = 0; j < sens.size() && !collocated; ++j) {
+                        System.out.println("IIII: " + k + "JOTA " + j);
+                        if (sensorIsFree(j) && j != k) {
+                            sparse_matrix[k][j] = (int) sens.get(k).getCapacidad();
+                            connections[k] = j;
+                            collocated = true;
+                        }
+                    }
+                }
+            } else {
+                for (int j = i + 1; j < sens.size() && j < i + 4; ++j) {
+                    sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
+                    connections[j] = i;
+                }
+            }
+        }
     }
 
     private void initial_solution_1() {
@@ -89,26 +155,6 @@ public class RedState {
         }
     }
 
-    private void initial_solution_2() {
-
-        int nsens = sens.size();
-        for (int i = 0; i < nsens; ++i) {
-            boolean collocated = false;
-            //se puede colocar a un centro random en vez de color los 25 primeros en el primer centro.
-            for (int j = 0; !collocated && j < cds.size(); ++j) {
-                if (centerIsFree(j)) {
-                    total_data += sens.get(i).getCapacidad();
-                    sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
-                    connections[i] = sens.size() + j;
-
-                    double dist = distance(sens.get(i).getCoordX(), sens.get(i).getCoordY(),
-                            cds.get(j).getCoordX(), cds.get(j).getCoordY());
-                    collocated = true;
-                }
-            }
-        }
-    }
-
     // Operadores
 
     // PRE: i & j < sens.size()
@@ -119,13 +165,13 @@ public class RedState {
         targetJ = connections[j];
 
         connections[i] = targetJ;
-        connections[j] = targetI;
+        connections[j] = i;
 
         sparse_matrix[i][targetI] = 0;
         sparse_matrix[i][targetJ] = (int) sens.get(i).getCapacidad();
 
         sparse_matrix[j][targetJ] = 0;
-        sparse_matrix[j][targetI] = (int) sens.get(j).getCapacidad();
+        sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
     }
 
     private boolean centerIsFree(int j) {
@@ -231,7 +277,7 @@ public class RedState {
         s.append("Connection map: ");
         for (int i = 0; i < connections.length; ++i) {
             s.append("S" + i + " -> " + connections[i]);
-            if (i < connections.length-1) s.append(", ");
+            if (i < connections.length - 1) s.append(", ");
         }
         s.append("\n");
         s.append("Coste total: " + recalculate_cost() + "\n");

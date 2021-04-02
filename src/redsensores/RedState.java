@@ -124,6 +124,7 @@ public class RedState {
 
         SortedByDist =  new int[sens.size() + cds.size()];
         fillSorted();
+
         return;
     }
 
@@ -159,8 +160,9 @@ public class RedState {
         visited[SortedByDist[0]] = true;
 
         for(int i = 1; i < sens.size() + cds.size();++i){
-            coords = getElemCoords(coords[0],coords[1],i);
+
             SortedByDist[i] = findClosestAvailable(coords[0],coords[1],visited);
+            coords = getElemCoords(coords[0],coords[1],i);
             visited[SortedByDist[i]] = true;
         }
     }

@@ -6,8 +6,7 @@ import IA.Red.Sensores;
 import java.util.Arrays;
 import java.util.Random;
 
-import static java.lang.Math.pow;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 
 
 public class RedState {
@@ -39,12 +38,10 @@ public class RedState {
 
         connections = new int[sens.size()];
 
-        if (option == 1) {
-            initial_solution_easy();
-        } else if (option == 2) {
-            initial_solution_4in4();
-        } else {
-            initial_solution_1();
+        switch (option) {
+            case 2 -> initial_solution_4in4();
+            case 3 -> initial_solution_3();
+            default -> initial_solution_easy();
         }
     }
 
@@ -107,7 +104,6 @@ public class RedState {
                 for (int k = i; k < sens.size(); ++k) {
                     collocated = false;
                     for (int j = 0; j < sens.size() && !collocated; ++j) {
-                        System.out.println("IIII: " + k + "JOTA " + j);
                         if (sensorIsFree(j) && j != k) {
                             sparse_matrix[k][j] = (int) sens.get(k).getCapacidad();
                             connections[k] = j;
@@ -124,7 +120,7 @@ public class RedState {
         }
     }
 
-    private void initial_solution_1() {
+    private void initial_solution_3() {
 
         // SOLUCION INICIAL
 
@@ -196,6 +192,10 @@ public class RedState {
         return true;
     }
 
+    public boolean isSwappable(int i, int j) {
+        return connections[j] != i;
+    }
+
     public double distance(int x1, int y1, int x2, int y2) {
         return sqrt(pow((x1 - x2), 2) + pow((y1 - y2), 2));
     }
@@ -206,30 +206,55 @@ public class RedState {
 
     public double recalculate_cost() {
         double cost = 0;
-        for (int i = 0; i < sparse_matrix.length; ++i) {
-            for (int j = 0; j < sparse_matrix[0].length; ++j) {
-                if (sparse_matrix[i][j] == 1) {
-                    int x1 = sens.get(i).getCoordX();
-                    int y1 = sens.get(i).getCoordY();
-                    int x2, y2;
-                    if (j < sens.size()) {
-                        x2 = sens.get(j).getCoordX();
-                        y2 = sens.get(j).getCoordY();
-                    } else {
-                        x2 = cds.get(j - sens.size()).getCoordX();
-                        y2 = cds.get(j - sens.size()).getCoordY();
-                    }
-                    cost += cost(distance(x1, y1, x2, y2), sens.get(i).getCapacidad());
-                }
+        for (int i = 0; i < connections.length; ++i) {
+            int x1 = sens.get(i).getCoordX();
+            int y1 = sens.get(i).getCoordY();
+            int y = connections[i];
+            int x2, y2;
+            if (y < sens.size()) {
+                x2 = sens.get(y).getCoordX();
+                y2 = sens.get(y).getCoordY();
+            } else {
+                x2 = cds.get(y - sens.size()).getCoordX();
+                y2 = cds.get(y - sens.size()).getCoordY();
             }
+            cost += cost(distance(x1, y1, x2, y2), sens.get(i).getCapacidad());
         }
         return cost;
     }
 
+    public int howMuchTransfer(int x) {
+        int data = 0;
+        int count = 0;
+        int capX = (int) sens.get(x).getCapacidad();
+        for (int i = 0; data < capX * 2 && count < 4 && i < connections.length; ++i) {
+            if (connections[i] == x) {
+                ++count;
+                int data2 = howMuchTransfer(i);
+                //System.out.println("Sensooor [" + i + "] transfiere al Sensor [" + x + "] con datos: " + data2);
+                if (data + data2 <= capX * 2) {
+                    data += data2;
+                } else data = capX * 2;
+            }
+        }
+        return data + capX;
+    }
+
     public double recalculate_data() {
         double data = 0;
-        for (int i = 0; i < sparse_matrix.length; ++i) {
-            data += Arrays.stream(sparse_matrix[i]).sum();
+        int count;
+        for (int i = 0; i < cds.size(); ++i) {
+            count = 0;
+            for (int j = 0; count < 26 && data < 150 && j < connections.length; ++j) {
+                if (connections[j] == sens.size() + i) {
+                    ++count;
+                    int data2 = howMuchTransfer(j);
+                    if (data2 <= 150) {
+                        data += data2;
+                        if (data > 150) data = 150;
+                    }
+                }
+            }
         }
         total_data = data;
         return data;

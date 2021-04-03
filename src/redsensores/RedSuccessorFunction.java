@@ -15,22 +15,26 @@ public class RedSuccessorFunction implements SuccessorFunction {
 
         for (int i = 0; i < board.getSens().size(); i++) {
 
-            for (int j = i + 1; j < board.getSens().size(); j++) {
-                RedState newBoard = new RedState(board);
+            for (int j = 0; j < board.getSens().size(); j++) {
+                if (i != j) {
 
-                newBoard.swap_connections(i, j);
+                    RedState newBoard = new RedState(board);
 
-                if (newBoard.isGDA()) {
-                    double v = TSPHF.getHeuristicValue(newBoard);
-                    String s = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
+                    // isSwappable es el mismo que GDA.
+                    if (newBoard.isSwappable(i, j) && newBoard.isGDA()) {
 
-                    System.out.println(s);
+                        newBoard.swap_connections(i, j);
 
-                    retVal.add(new Successor(s, newBoard));
+                        double v = TSPHF.getHeuristicValue(newBoard);
+                        String s = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
+
+                        System.out.println(s);
+
+                        retVal.add(new Successor(s, newBoard));
+                    }
                 }
             }
         }
-
         return retVal;
     }
 }

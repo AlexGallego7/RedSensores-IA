@@ -14,8 +14,8 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) throws Exception{
-        RedState board =new RedState(3, 1, 1, 2);
-        //System.out.println(board);
+        RedState board =new RedState(5, 2, 1, 2);
+        System.out.println(board);
         RedSensorHillClimbingSearch(board);
         //TSPSimulatedAnnealingSearch(board);
 

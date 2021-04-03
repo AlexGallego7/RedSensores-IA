@@ -26,15 +26,15 @@ public class RedSuccessorFunction implements SuccessorFunction {
                         newBoard.swap_connections(i, j);
 
                         double v = TSPHF.getHeuristicValue(newBoard);
-                        String s = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
+                        String S = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
 
-                        System.out.println(s);
+                        //System.out.println(s);
 
-                        retVal.add(new Successor(s, newBoard));
+                        retVal.add(new Successor(S, newBoard));
                     }
                 }
             }
         }
-        return retVal;
+        return (retVal);
     }
 }

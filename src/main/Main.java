@@ -13,8 +13,8 @@ import java.util.Properties;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception{
-        RedState board =new RedState(5, 2, 1, 2);
+    public static void main(String[] args) throws Exception {
+        RedState board = new RedState(20, 2, 1, 2);
         System.out.println(board);
         RedSensorHillClimbingSearch(board);
         //TSPSimulatedAnnealingSearch(board);
@@ -24,9 +24,9 @@ public class Main {
     private static void RedSensorHillClimbingSearch(RedState board) {
         System.out.println("\nTSP HillClimbing  -->");
         try {
-            Problem problem =  new Problem(board, new RedSuccessorFunction(), new RedGoalTest(),new RedHeuristicFunction());
-            Search search =  new HillClimbingSearch();
-            SearchAgent agent = new SearchAgent(problem,search);
+            Problem problem = new Problem(board, new RedSuccessorFunction(), new RedGoalTest(), new RedHeuristicFunction());
+            Search search = new HillClimbingSearch();
+            SearchAgent agent = new SearchAgent(problem, search);
 
             System.out.println();
             printActions(agent.getActions());
@@ -39,10 +39,10 @@ public class Main {
     private static void TSPSimulatedAnnealingSearch(RedState board) {
         System.out.println("\nTSP Simulated Annealing  -->");
         try {
-            Problem problem =  new Problem(board,new RedSuccessorFunctionSA(), new RedGoalTest(),new RedHeuristicFunction());
-            SimulatedAnnealingSearch search =  new SimulatedAnnealingSearch(2000,100,5,0.001);
+            Problem problem = new Problem(board, new RedSuccessorFunctionSA(), new RedGoalTest(), new RedHeuristicFunction());
+            SimulatedAnnealingSearch search = new SimulatedAnnealingSearch(2000, 100, 5, 0.001);
             //search.traceOn();
-            SearchAgent agent = new SearchAgent(problem,search);
+            SearchAgent agent = new SearchAgent(problem, search);
 
             System.out.println();
             printActions(agent.getActions());
@@ -53,8 +53,9 @@ public class Main {
     }
 
     private static void printInstrumentation(Properties properties) {
-        for (Object o : properties.keySet()) {
-            String key = (String) o;
+        Iterator keys = properties.keySet().iterator();
+        while (keys.hasNext()) {
+            String key = (String) keys.next();
             String property = properties.getProperty(key);
             System.out.println(key + " : " + property);
         }
@@ -62,8 +63,8 @@ public class Main {
     }
 
     private static void printActions(List actions) {
-        for (Object o : actions) {
-            String action = (String) o;
+        for (int i = 0; i < actions.size(); i++) {
+            String action = (String) actions.get(i);
             System.out.println(action);
         }
     }

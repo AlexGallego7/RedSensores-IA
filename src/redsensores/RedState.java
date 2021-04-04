@@ -31,7 +31,7 @@ public class RedState {
 
 
     // Cantidad de información transmitida
-    private double total_data;
+    private static double total_data;
 
     public RedState(int nsens, int ncds, int seed, int option) {
 
@@ -71,9 +71,7 @@ public class RedState {
     private void initial_solution_1() {
 
         // SOLUCION INICIAL
-
         // 1 -> Cada sensor transmite su información a su centro con menos coste.
-
         //mirar las restricciones
 
         for (int i = 0; i < sens.size(); ++i) {
@@ -124,7 +122,8 @@ public class RedState {
 
         SortedByDist =  new int[sens.size() + cds.size()];
         fillSorted();
-
+        conectSorted();
+//llenar el total data
         return;
     }
 
@@ -149,8 +148,68 @@ public class RedState {
     }
 
 // otras funciones
+    private void conectSorted(){
+        int centersPos[] = new int[cds.size()];
+        int c = 0;
+        for (int i = 0; i < SortedByDist.length; ++i){//encontramos las posiciones de los centros en el vector Sorted
+            if(!isSensor(SortedByDist[i])) {
+                centersPos[c] = i;
+                c++;
+            }
+        }
+        for (c = 0; c < centersPos.length; c++){//dividimos el vector en partes, para conectar los mas cercanos
+            if(c == 0 && c < cds.size() - 1 ) { // si es el primer centro pero hay mas
+                if(centersPos[c]  > 0){
+                    conectGroup(0,SortedByDist[centersPos[c] - 1], centersPos[c]);// izq
+                }
+                if(centersPos[c] + 1 < SortedByDist.length){
+                    conectGroup(SortedByDist[(centersPos[c] + centersPos[c+1])/2],SortedByDist[centersPos[c] + 1], centersPos[c]); //der
+                }
+            }
+            else if(c == 0 && c == cds.size() - 1){ // solo hay un centro, conecto todo
+                if(centersPos[c]  > 0){
+                    conectGroup(0,SortedByDist[centersPos[c] - 1], centersPos[c]);//izq
+                }
+                if(centersPos[c] + 1 < SortedByDist.length){
+                    conectGroup(SortedByDist[SortedByDist.length - 1],SortedByDist[centersPos[c] + 1], centersPos[c]);//derecha
+                }
+            }
+            else if (c == cds.size() - 1){ // si es el ultimo centro
+                if(centersPos[c] + 1 < SortedByDist.length){
+                    conectGroup(SortedByDist[SortedByDist.length - 1], SortedByDist[centersPos[c] + 1],centersPos[c]);//derecha
+                }
+                if(centersPos[c]  > 0){
+                    conectGroup(SortedByDist[((centersPos[c] + centersPos[c - 1])/2) + 1], SortedByDist[centersPos[c] - 1], centersPos[c]);//izq
+                }
+            }
+            else { // es un centro del medio
+                if(centersPos[c]  > 0){
+                    conectGroup(SortedByDist[((centersPos[c] + centersPos[c - 1])/2) + 1],SortedByDist[centersPos[c] - 1],centersPos[c]);//izq
+                }
+                if(centersPos[c] + 1 < SortedByDist.length){
+                    conectGroup(SortedByDist[((centersPos[c] + centersPos[c + 1])/2)], SortedByDist[centersPos[c] + 1],centersPos[c]);//der
+                }
+            }
 
+        }
 
+    }
+    private void conectGroup(int i, int j, int c){//conecta en fila los sensores desde i a j, i el ultimo al centro c
+        if (i < j) {//izq
+            for (; i < c; ++i) {
+                if(isSensor(SortedByDist[i])) {
+                    sparse_matrix[SortedByDist[i]][SortedByDist[i + 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
+                }
+            }
+        }
+        else if (i > j && j < SortedByDist.length){//der
+            for (; i > c; --i) {
+                if(isSensor(SortedByDist[i + 1])) {
+                    sparse_matrix[SortedByDist[i]][SortedByDist[i - 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
+                }
+            }
+        }
+    }
     private void fillSorted(){
         Boolean visited[] = new Boolean[sens.size() + cds.size()];
         Arrays.fill(visited,false);
@@ -158,11 +217,12 @@ public class RedState {
         int[] coords = new int[2];
         SortedByDist[0] = findClosestAvailable(0,0,visited);
         visited[SortedByDist[0]] = true;
+        coords = getElemCoords(coords[0],coords[1],SortedByDist[0]);
 
         for(int i = 1; i < sens.size() + cds.size();++i){
 
             SortedByDist[i] = findClosestAvailable(coords[0],coords[1],visited);
-            coords = getElemCoords(coords[0],coords[1],i);
+            coords = getElemCoords(coords[0],coords[1],SortedByDist[i]);
             visited[SortedByDist[i]] = true;
         }
     }
@@ -233,6 +293,7 @@ public class RedState {
     public boolean isGDA() {
         //si no hay perdida de datos seguro que no hay ciclos
         if(recalculate_data() - data_recived() == 0)  return true;
+
 
         return true;
 

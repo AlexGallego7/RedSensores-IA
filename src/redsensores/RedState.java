@@ -29,9 +29,8 @@ public class RedState {
 
     private int[] connections;
 
+    private int[] dataSent;
 
-    // Cantidad de información transmitida
-    private static double total_data;
 
     public RedState(int nsens, int ncds, int seed, int option) {
 
@@ -39,21 +38,14 @@ public class RedState {
         cds = new CentrosDatos(ncds, seed);
 
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
-
         connections = new int[sens.size()];
+        dataSent = new int[sens.size()];
 
-        switch (option){
-            case 1:
-                initial_solution_1();
-                break;
-            case 2:
-                initial_solution_2();
-                break;
-            case 3:
-                initial_solution_3();
-                break;
-            default:
-                initial_solution_1();
+
+        switch (option) {
+            case 2 -> initial_solution_4in4();
+            case 3 -> initial_solution_efficient();
+            default -> initial_solution_easy();
         }
 
     }
@@ -62,69 +54,82 @@ public class RedState {
 
         sens = oldState.getSens();
         cds = oldState.getCds();
-        sparse_matrix = oldState.getSparse_matrix().clone();
-        connections = oldState.getConnections().clone();
-    }
-
-
-
-    private void initial_solution_1() {
-
-        // SOLUCION INICIAL
-        // 1 -> Cada sensor transmite su información a su centro con menos coste.
-        //mirar las restricciones
-
+        sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         for (int i = 0; i < sens.size(); ++i) {
-            double min = Double.MAX_VALUE;
-            double cost;
-            int n = 0;
-            for (int j = 0; j < cds.size(); ++j) {
-                if (centerIsFree(j)) {
-                    double dist = distance(sens.get(i).getCoordX(), sens.get(i).getCoordY(),
-                            cds.get(j).getCoordX(), cds.get(j).getCoordY());
-                    cost = cost(dist, sens.get(i).getCapacidad());
-
-                    if (cost < min) {
-                        min = cost;
-                        n = j;
-                    }
-                }
-            }
-            if (centerIsFree(n)) {
-                sparse_matrix[i][sens.size() + n] = (int) sens.get(i).getCapacidad();
-                connections[i] = sens.size() + n;
-            }
+            sparse_matrix[i] = oldState.sparse_matrix[i].clone();
         }
+        connections = oldState.getConnections().clone();
+        dataSent = oldState.getDataSent().clone();
 
     }
 
-    private void initial_solution_2() {
+    private void initial_solution_easy() {
+
+        //llenar al el primer centro, luego el siguente. SI TODOS los centros estan llenos, EL SENSOR sin ser assignado LE ENVIARA AL PRIMER SENSOR que este llibre
+
         int nsens = sens.size();
         for (int i = 0; i < nsens; ++i) {
             boolean collocated = false;
-            //se puede colocar a un centro random en vez de color los 25 primeros en el primer centro.
             for (int j = 0; !collocated && j < cds.size(); ++j) {
                 if (centerIsFree(j)) {
-                    total_data += sens.get(i).getCapacidad();
                     sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
 
-                    double dist = distance(sens.get(i).getCoordX(), sens.get(i).getCoordY(),
-                            cds.get(j).getCoordX(), cds.get(j).getCoordY());
                     collocated = true;
+                }
+            }
+            if (!collocated) {
+                for (int j = 0; j < sens.size() && !collocated; ++j) {
+                    if (sensorIsFree(j) && j != i) {
+                        sparse_matrix[i][j] = (int) sens.get(i).getCapacidad();
+                        connections[i] = j;
+                        collocated = true;
+                    }
                 }
             }
         }
     }
 
-    //cada sensor envia a su punto mas cercano available, assegurando el GDA y que todas las conexiones llegan a un centro
-    private void initial_solution_3(){
+    private void initial_solution_4in4() {
+        boolean fi = false;
+        for (int i = 0; i < sens.size() && !fi; i += 4) {
+            boolean collocated = false;
+            for (int j = 0; !collocated && j < cds.size(); ++j) {
+                if (centerIsFree(j)) {
+                    sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
+                    connections[i] = sens.size() + j;
+
+                    collocated = true;
+                }
+            }
+            if (!collocated) {
+                fi = true;
+                for (int k = i; k < sens.size(); ++k) {
+                    collocated = false;
+                    for (int j = 0; j < sens.size() && !collocated; ++j) {
+                        if (sensorIsFree(j) && j != k) {
+                            sparse_matrix[k][j] = (int) sens.get(k).getCapacidad();
+                            connections[k] = j;
+                            collocated = true;
+                        }
+                    }
+                }
+            } else {
+                for (int j = i + 1; j < sens.size() && j < i + 4; ++j) {
+                    sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
+                    connections[j] = i;
+                }
+            }
+        }
+    }
+
+    //cada sensor envia a su punto mas cercano available, assegurando el que todas las conexiones llegan a un centro
+    private void initial_solution_efficient(){
 
         SortedByDist =  new int[sens.size() + cds.size()];
+
         fillSorted();
         conectSorted();
-
-        return;
     }
 
 
@@ -145,6 +150,24 @@ public class RedState {
 
         sparse_matrix[j][targetJ] = 0;
         sparse_matrix[j][targetI] = (int) sens.get(j).getCapacidad();
+    }
+
+    // PRE: i & j < sens.size()
+    // a connection hi ha el index del sensor desti, mentre a sparse_matrix hi ha la data que es transmet
+
+    public void swapRaro(int i, int j) {
+        int targetI, targetJ;
+        targetI = connections[i];
+        targetJ = connections[j];
+
+        connections[i] = targetJ;
+        connections[j] = i;
+
+        sparse_matrix[i][targetI] = 0;
+        sparse_matrix[i][targetJ] = (int) sens.get(i).getCapacidad();
+
+        sparse_matrix[j][targetJ] = 0;
+        sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
     }
 
 // otras funciones
@@ -269,7 +292,7 @@ public class RedState {
     }
 
 
-    private boolean isAvailabe(int elem){
+    private boolean isAvailabe(int elem){ //
         if(isSensor(elem)) return sensorIsFree(elem);
         return centerIsFree(elem - sens.size());
     }
@@ -291,17 +314,57 @@ public class RedState {
         }
         return true;
     }
-
-    public boolean isGDA() {// hacer dos
-        //si no hay perdida de datos seguro que no hay ciclos
-        //hacer dos bools
-        if(recalculate_data() - data_recived() == 0)  return true;
-
-
-
-        return true;
-
+    //First Successor funcion
+    public boolean isSwappable(int i, int j) {
+        return connections[j] != i && connections[i] != j && connections[j] != connections[i];
     }
+    //SECOND Successor funcion
+    public boolean isAvailable(int i, int j) {
+        if(j < sens.size()){
+            //return SensIsFree(j) + 1 < 4
+        }
+        else{
+            //return (SensIsFree(j) + 1) < 26
+        }
+        return true;
+    }
+     /*public boolean isSwappableRaro(int i, int j) {
+        return connections[j] != i && sensorIsFree(i);
+    }*/
+     public boolean isValid() {
+        //si no hay perdida de datos seguro que no hay ciclos
+         //hacer dos bools
+         if(recalculate_data() - data_recived() == 0)  return true;
+         int[] arrivaAunCentre = new int[sens.size()];
+         for (int i = 0; i < sens.size() && arrivaAunCentre[i] == 0; ++i) {
+             int[] visited = new int[sens.size()];
+             visited[i] = 1;
+             int target = connections[i];
+             while (true) {
+                 if (target >= sens.size()) {
+                     arrivaAunCentre[i] = 1;
+                     for (int j = 0; j < visited.length; ++j) {
+                         if (visited[j] == 1) {
+                             arrivaAunCentre[j] = 1;
+                         }
+                     }
+                     break;
+                 }
+                 if (visited[target] == 1) return false;
+                 if (arrivaAunCentre[target] == 1) {
+                     for (int j = 0; j < visited.length; ++j) {
+                         if (visited[j] == 1) {
+                             arrivaAunCentre[j] = 1;
+                         }
+                     }
+                     break;
+                 }
+                 visited[target] = 1;
+                 target = connections[target];
+             }
+         }
+         return true;
+     }
 
     public double distance(int x1, int y1, int x2, int y2) {
         return sqrt(pow((x1 - x2), 2) + pow((y1 - y2), 2));
@@ -312,34 +375,59 @@ public class RedState {
     }
 
     public double recalculate_cost() {
+        double x = recalculate_data();
+
         double cost = 0;
-        for (int i = 0; i < sparse_matrix.length; ++i) {
-            for (int j = 0; j < sparse_matrix[0].length; ++j) {
-                if (sparse_matrix[i][j] == 1) {
-                    int x1 = sens.get(i).getCoordX();
-                    int y1 = sens.get(i).getCoordY();
-                    int x2, y2;
-                    if (j < sens.size()) {
-                        x2 = sens.get(j).getCoordX();
-                        y2 = sens.get(j).getCoordY();
-                    } else {
-                        x2 = cds.get(j - sens.size()).getCoordX();
-                        y2 = cds.get(j - sens.size()).getCoordY();
-                    }
-                    cost += cost(distance(x1, y1, x2, y2), sens.get(i).getCapacidad());
-                }
+        for (int i = 0; i < connections.length; ++i) {
+            int x1 = sens.get(i).getCoordX();
+            int y1 = sens.get(i).getCoordY();
+            int y = connections[i];
+            int x2, y2;
+            if (y < sens.size()) {
+                x2 = sens.get(y).getCoordX();
+                y2 = sens.get(y).getCoordY();
+            } else {
+                x2 = cds.get(y - sens.size()).getCoordX();
+                y2 = cds.get(y - sens.size()).getCoordY();
             }
+            cost += cost(distance(x1, y1, x2, y2), dataSent[i]);
         }
         return cost;
     }
 
     public double recalculate_data() {
         double data = 0;
-        for (int i = 0; i < sparse_matrix.length; ++i) {
-            data += Arrays.stream(sparse_matrix[i]).sum();
+        int count;
+        for (int i = 0; i < cds.size(); ++i) {
+            count = 0;
+            for (int j = 0; count < 26 && j < connections.length; ++j) {
+                if (connections[j] == sens.size() + i) {
+                    ++count;
+                    int data2 = howMuchTransfer(j);
+                    if (data2 <= 150) {
+                        data += data2;
+                        if (data > 150) data = 150;
+                    }
+                }
+            }
         }
-        total_data = data;
         return data;
+    }
+    public int howMuchTransfer(int x) {
+        int data = 0;
+        int count = 0;
+        int capX = (int) sens.get(x).getCapacidad();
+        for (int i = 0; count < 4 && i < connections.length; ++i) {
+            if (connections[i] == x) {
+                ++count;
+                int data2 = howMuchTransfer(i);
+                if (data + data2 <= capX * 2) {
+                    data += data2;
+                } else data = capX * 2;
+            }
+        }
+        dataSent[x] = data + capX;
+        return data + capX;
     }
     public double data_recived(){//los datos recividos por los centros
         double data = 0;
@@ -359,6 +447,9 @@ public class RedState {
 
     public CentrosDatos getCds() {
         return cds;
+    }
+    public int[] getDataSent() {
+        return dataSent;
     }
 
     public int[][] getSparse_matrix() {
@@ -398,9 +489,6 @@ public class RedState {
         s.append("\n");
         s.append("Coste total: " + recalculate_cost() + "\n");
         s.append("Datos transferidos: " + recalculate_data() + "\n");
-        s.append("datos perdidos: " + (recalculate_data() - data_recived()) + "\n");
-
-
         return s.toString();
     }
 }

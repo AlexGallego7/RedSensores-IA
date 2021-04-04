@@ -11,7 +11,7 @@ public class RedSuccessorFunction implements SuccessorFunction {
     public List getSuccessors(Object aState) {
         ArrayList retVal = new ArrayList();
         RedState board = (RedState) aState;
-        RedHeuristicFunction TSPHF = new RedHeuristicFunction();
+        RedHeuristicFunction RHF = new RedHeuristicFunction();
 
         for (int i = 0; i < board.getSens().size(); i++) {
 
@@ -25,7 +25,7 @@ public class RedSuccessorFunction implements SuccessorFunction {
 
                         newBoard.swap_connections(i, j);
 
-                        double v = TSPHF.getHeuristicValue(newBoard);
+                        double v = RHF.getHeuristicValue(newBoard);
                         String S = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
 
                         //System.out.println(s);

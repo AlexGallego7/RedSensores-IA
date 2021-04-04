@@ -17,7 +17,7 @@ public class Main {
         RedState board = new RedState(20, 2, 1, 2);
         System.out.println(board);
         RedSensorHillClimbingSearch(board);
-        //TSPSimulatedAnnealingSearch(board);
+        RedSimulatedAnnealingSearch(board);
 
     }
 
@@ -36,12 +36,12 @@ public class Main {
         }
     }
 
-    private static void TSPSimulatedAnnealingSearch(RedState board) {
+    private static void RedSimulatedAnnealingSearch(RedState board) {
         System.out.println("\nTSP Simulated Annealing  -->");
         try {
             Problem problem = new Problem(board, new RedSuccessorFunctionSA(), new RedGoalTest(), new RedHeuristicFunction());
             SimulatedAnnealingSearch search = new SimulatedAnnealingSearch(2000, 100, 5, 0.001);
-            //search.traceOn();
+            search.traceOn();
             SearchAgent agent = new SearchAgent(problem, search);
 
             System.out.println();

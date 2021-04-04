@@ -123,7 +123,7 @@ public class RedState {
         SortedByDist =  new int[sens.size() + cds.size()];
         fillSorted();
         conectSorted();
-//llenar el total data
+
         return;
     }
 
@@ -160,34 +160,34 @@ public class RedState {
         for (c = 0; c < centersPos.length; c++){//dividimos el vector en partes, para conectar los mas cercanos
             if(c == 0 && c < cds.size() - 1 ) { // si es el primer centro pero hay mas
                 if(centersPos[c]  > 0){
-                    conectGroup(0,SortedByDist[centersPos[c] - 1], centersPos[c]);// izq
+                    conectGroup(0,centersPos[c] - 1, centersPos[c]);// izq
                 }
                 if(centersPos[c] + 1 < SortedByDist.length){
-                    conectGroup(SortedByDist[(centersPos[c] + centersPos[c+1])/2],SortedByDist[centersPos[c] + 1], centersPos[c]); //der
+                    conectGroup((centersPos[c] + centersPos[c+1])/2,centersPos[c] + 1, centersPos[c]); //der
                 }
             }
             else if(c == 0 && c == cds.size() - 1){ // solo hay un centro, conecto todo
                 if(centersPos[c]  > 0){
-                    conectGroup(0,SortedByDist[centersPos[c] - 1], centersPos[c]);//izq
+                    conectGroup(0,centersPos[c] - 1, centersPos[c]);//izq
                 }
                 if(centersPos[c] + 1 < SortedByDist.length){
-                    conectGroup(SortedByDist[SortedByDist.length - 1],SortedByDist[centersPos[c] + 1], centersPos[c]);//derecha
+                    conectGroup(SortedByDist.length - 1,centersPos[c] + 1, centersPos[c]);//derecha
                 }
             }
             else if (c == cds.size() - 1){ // si es el ultimo centro
-                if(centersPos[c] + 1 < SortedByDist.length){
-                    conectGroup(SortedByDist[SortedByDist.length - 1], SortedByDist[centersPos[c] + 1],centersPos[c]);//derecha
+                if(centersPos[c] + 1 < SortedByDist.length){//der
+                    conectGroup(SortedByDist.length - 1, centersPos[c] + 1,centersPos[c]);//derecha
                 }
                 if(centersPos[c]  > 0){
-                    conectGroup(SortedByDist[((centersPos[c] + centersPos[c - 1])/2) + 1], SortedByDist[centersPos[c] - 1], centersPos[c]);//izq
+                    conectGroup(((centersPos[c] + centersPos[c - 1])/2) + 1, centersPos[c] - 1, centersPos[c]);//izq
                 }
             }
             else { // es un centro del medio
                 if(centersPos[c]  > 0){
-                    conectGroup(SortedByDist[((centersPos[c] + centersPos[c - 1])/2) + 1],SortedByDist[centersPos[c] - 1],centersPos[c]);//izq
+                    conectGroup(((centersPos[c] + centersPos[c - 1])/2) + 1,centersPos[c] - 1,centersPos[c]);//izq
                 }
                 if(centersPos[c] + 1 < SortedByDist.length){
-                    conectGroup(SortedByDist[((centersPos[c] + centersPos[c + 1])/2)], SortedByDist[centersPos[c] + 1],centersPos[c]);//der
+                    conectGroup(((centersPos[c] + centersPos[c + 1])/2), centersPos[c] + 1,centersPos[c]);//der
                 }
             }
 
@@ -199,13 +199,15 @@ public class RedState {
             for (; i < c; ++i) {
                 if(isSensor(SortedByDist[i])) {
                     sparse_matrix[SortedByDist[i]][SortedByDist[i + 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
+                    connections[SortedByDist[i]] = SortedByDist[i + 1];
                 }
             }
         }
         else if (i > j && j < SortedByDist.length){//der
             for (; i > c; --i) {
-                if(isSensor(SortedByDist[i + 1])) {
+                if(isSensor(SortedByDist[i])) {
                     sparse_matrix[SortedByDist[i]][SortedByDist[i - 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
+                    connections[SortedByDist[i]] = SortedByDist[i - 1];
                 }
             }
         }
@@ -290,9 +292,11 @@ public class RedState {
         return true;
     }
 
-    public boolean isGDA() {
+    public boolean isGDA() {// hacer dos
         //si no hay perdida de datos seguro que no hay ciclos
+        //hacer dos bools
         if(recalculate_data() - data_recived() == 0)  return true;
+
 
 
         return true;

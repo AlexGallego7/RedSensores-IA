@@ -25,7 +25,7 @@ public class RedSuccessorFunctionSA implements SuccessorFunction {
 
         RedState newBoard = new RedState(board);
 
-        newBoard.swap_connections(i, j);
+        newBoard.swapRaro(i, j);
 
         double v = RHF.getHeuristicValue(newBoard);
         String S = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();

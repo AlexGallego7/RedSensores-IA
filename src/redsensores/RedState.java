@@ -26,8 +26,8 @@ public class RedState {
 
     private int[] connections;
 
-    // Cantidad de información transmitida
-    private double total_data;
+    private int[] dataSent;
+
 
     public RedState(int nsens, int ncds, int seed, int option) {
 
@@ -35,8 +35,8 @@ public class RedState {
         cds = new CentrosDatos(ncds, seed);
 
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
-
         connections = new int[sens.size()];
+        dataSent = new int[sens.size()];
 
         switch (option) {
             case 2 -> initial_solution_4in4();
@@ -55,6 +55,7 @@ public class RedState {
             sparse_matrix[i] = oldState.sparse_matrix[i].clone();
         }
         connections = oldState.getConnections().clone();
+        dataSent = oldState.getDataSent().clone();
 
     }
 
@@ -67,7 +68,6 @@ public class RedState {
             boolean collocated = false;
             for (int j = 0; !collocated && j < cds.size(); ++j) {
                 if (centerIsFree(j)) {
-                    total_data += sens.get(i).getCapacidad();
                     sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
 
@@ -92,7 +92,6 @@ public class RedState {
             boolean collocated = false;
             for (int j = 0; !collocated && j < cds.size(); ++j) {
                 if (centerIsFree(j)) {
-                    total_data += sens.get(i).getCapacidad();
                     sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
 
@@ -151,11 +150,27 @@ public class RedState {
         }
     }
 
+
     // Operadores
+    public void swap_connection(int i, int j) {
+        int targetI, targetJ;
+        targetI = connections[i];
+        targetJ = connections[j];
+
+        connections[i] = targetJ;
+        connections[j] = targetI;
+
+        sparse_matrix[i][targetI] = 0;
+        sparse_matrix[i][targetJ] = (int) sens.get(i).getCapacidad();
+
+        sparse_matrix[j][targetJ] = 0;
+        sparse_matrix[j][targetI] = (int) sens.get(j).getCapacidad();
+    }
 
     // PRE: i & j < sens.size()
     // a connection hi ha el index del sensor desti, mentre a sparse_matrix hi ha la data que es transmet
-    public void swap_connections(int i, int j) {
+
+    public void swapRaro(int i, int j) {
         int targetI, targetJ;
         targetI = connections[i];
         targetJ = connections[j];
@@ -188,12 +203,56 @@ public class RedState {
         return true;
     }
 
-    public boolean isGDA() {
+    //First Successor funcion
+    public boolean isSwappable(int i, int j) {
+        return connections[j] != i && connections[i] != j && connections[j] != connections[i];
+    }
+    //SECOND Successor funcion
+    public boolean isAvailable(int i, int j) {
+        if(j < sens.size()){
+            //return SensIsFree(j) + 1 < 4
+        }
+        else{
+            //return (SensIsFree(j) + 1) < 26
+        }
         return true;
     }
 
-    public boolean isSwappable(int i, int j) {
-        return connections[j] != i;
+    /*public boolean isSwappableRaro(int i, int j) {
+        return connections[j] != i && sensorIsFree(i);
+    }*/
+
+    public boolean isValid() {
+
+        int[] arrivaAunCentre = new int[sens.size()];
+        for (int i = 0; i < sens.size() && arrivaAunCentre[i] == 0; ++i) {
+            int[] visited = new int[sens.size()];
+            visited[i] = 1;
+            int target = connections[i];
+            while (true) {
+                if (target >= sens.size()) {
+                    arrivaAunCentre[i] = 1;
+                    for (int j = 0; j < visited.length; ++j) {
+                        if (visited[j] == 1) {
+                            arrivaAunCentre[j] = 1;
+                        }
+                    }
+                    break;
+                }
+                if (visited[target] == 1) return false;
+                if (arrivaAunCentre[target] == 1) {
+                    for (int j = 0; j < visited.length; ++j) {
+                        if (visited[j] == 1) {
+                            arrivaAunCentre[j] = 1;
+                        }
+                    }
+                    break;
+                }
+                visited[target] = 1;
+                target = connections[target];
+            }
+        }
+        return true;
     }
 
     public double distance(int x1, int y1, int x2, int y2) {
@@ -205,6 +264,9 @@ public class RedState {
     }
 
     public double recalculate_cost() {
+
+        double x = recalculate_data();
+
         double cost = 0;
         for (int i = 0; i < connections.length; ++i) {
             int x1 = sens.get(i).getCoordX();
@@ -218,7 +280,7 @@ public class RedState {
                 x2 = cds.get(y - sens.size()).getCoordX();
                 y2 = cds.get(y - sens.size()).getCoordY();
             }
-            cost += cost(distance(x1, y1, x2, y2), sens.get(i).getCapacidad());
+            cost += cost(distance(x1, y1, x2, y2), dataSent[i]);
         }
         return cost;
     }
@@ -227,16 +289,16 @@ public class RedState {
         int data = 0;
         int count = 0;
         int capX = (int) sens.get(x).getCapacidad();
-        for (int i = 0; data < capX * 2 && count < 4 && i < connections.length; ++i) {
+        for (int i = 0; count < 4 && i < connections.length; ++i) {
             if (connections[i] == x) {
                 ++count;
                 int data2 = howMuchTransfer(i);
-                //System.out.println("Sensooor [" + i + "] transfiere al Sensor [" + x + "] con datos: " + data2);
                 if (data + data2 <= capX * 2) {
                     data += data2;
                 } else data = capX * 2;
             }
         }
+        dataSent[x] = data + capX;
         return data + capX;
     }
 
@@ -245,7 +307,7 @@ public class RedState {
         int count;
         for (int i = 0; i < cds.size(); ++i) {
             count = 0;
-            for (int j = 0; count < 26 && data < 150 && j < connections.length; ++j) {
+            for (int j = 0; count < 26 && j < connections.length; ++j) {
                 if (connections[j] == sens.size() + i) {
                     ++count;
                     int data2 = howMuchTransfer(j);
@@ -256,7 +318,6 @@ public class RedState {
                 }
             }
         }
-        total_data = data;
         return data;
     }
 
@@ -268,6 +329,10 @@ public class RedState {
 
     public CentrosDatos getCds() {
         return cds;
+    }
+
+    public int[] getDataSent() {
+        return dataSent;
     }
 
     public int[][] getSparse_matrix() {

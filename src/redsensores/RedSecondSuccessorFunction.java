@@ -21,7 +21,7 @@ public class RedSecondSuccessorFunction implements SuccessorFunction {
                     RedState newBoard = new RedState(board);
 
                     // isSwappable es el mismo que GDA.
-                    if (newBoard.isAvailable(i, j)) {
+                    if (newBoard.isAvailable(j)) {
 
                         newBoard.swapRaro(i, j);
 

@@ -40,7 +40,7 @@ public class RedState {
 
         switch (option) {
             case 2 -> initial_solution_4in4();
-            case 3 -> initial_solution_3();
+            case 3 -> initial_solution_efficient();
             default -> initial_solution_easy();
         }
     }
@@ -119,35 +119,12 @@ public class RedState {
         }
     }
 
-    private void initial_solution_3() {
+    private void initial_solution_efficient() {
 
-        // SOLUCION INICIAL
+        int[] SortedByDist = new int[sens.size() + cds.size()];
 
-        // 1 -> Cada sensor transmite su información a su centro con menos coste.
-
-        //mirar las restricciones
-
-        for (int i = 0; i < sens.size(); ++i) {
-            double min = Double.MAX_VALUE;
-            double cost;
-            int n = 0;
-            for (int j = 0; j < cds.size(); ++j) {
-                if (centerIsFree(j)) {
-                    double dist = distance(sens.get(i).getCoordX(), sens.get(i).getCoordY(),
-                            cds.get(j).getCoordX(), cds.get(j).getCoordY());
-                    cost = cost(dist, sens.get(i).getCapacidad());
-
-                    if (cost < min) {
-                        min = cost;
-                        n = j;
-                    }
-                }
-            }
-            if (centerIsFree(n)) {
-                sparse_matrix[i][sens.size() + n] = (int) sens.get(i).getCapacidad();
-                connections[i] = sens.size() + n;
-            }
-        }
+        fillSorted(SortedByDist);
+        conectSorted(SortedByDist);
     }
 
 
@@ -185,6 +162,125 @@ public class RedState {
         sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
     }
 
+    // otras funciones
+    private void conectSorted(int[] SortedByDist) {
+        int centersPos[] = new int[cds.size()];
+        int c = 0;
+        for (int i = 0; i < SortedByDist.length; ++i) {//encontramos las posiciones de los centros en el vector Sorted
+            if (!isSensor(SortedByDist[i])) {
+                centersPos[c] = i;
+                c++;
+            }
+        }
+        for (c = 0; c < centersPos.length; c++) {//dividimos el vector en partes, para conectar los mas cercanos
+            if (c == 0 && c < cds.size() - 1) { // si es el primer centro pero hay mas
+                if (centersPos[c] > 0) {
+                    conectGroup(SortedByDist, 0, centersPos[c] - 1, centersPos[c]);// izq
+                }
+                if (centersPos[c] + 1 < SortedByDist.length) {
+                    conectGroup(SortedByDist, (centersPos[c] + centersPos[c + 1]) / 2, centersPos[c] + 1, centersPos[c]); //der
+                }
+            } else if (c == 0 && c == cds.size() - 1) { // solo hay un centro, conecto todo
+                if (centersPos[c] > 0) {
+                    conectGroup(SortedByDist, 0, centersPos[c] - 1, centersPos[c]);//izq
+                }
+                if (centersPos[c] + 1 < SortedByDist.length) {
+                    conectGroup(SortedByDist, SortedByDist.length - 1, centersPos[c] + 1, centersPos[c]);//derecha
+                }
+            } else if (c == cds.size() - 1) { // si es el ultimo centro
+                if (centersPos[c] + 1 < SortedByDist.length) {//der
+                    conectGroup(SortedByDist, SortedByDist.length - 1, centersPos[c] + 1, centersPos[c]);//derecha
+                }
+                if (centersPos[c] > 0) {
+                    conectGroup(SortedByDist, ((centersPos[c] + centersPos[c - 1]) / 2) + 1, centersPos[c] - 1, centersPos[c]);//izq
+                }
+            } else { // es un centro del medio
+                if (centersPos[c] > 0) {
+                    conectGroup(SortedByDist, ((centersPos[c] + centersPos[c - 1]) / 2) + 1, centersPos[c] - 1, centersPos[c]);//izq
+                }
+                if (centersPos[c] + 1 < SortedByDist.length) {
+                    conectGroup(SortedByDist, ((centersPos[c] + centersPos[c + 1]) / 2), centersPos[c] + 1, centersPos[c]);//der
+                }
+            }
+
+        }
+
+    }
+
+    private void conectGroup(int[] SortedByDist, int i, int j, int c) {//conecta en fila los sensores desde i a j, i el ultimo al centro c
+        if (i < j) {//izq
+            for (; i < c; ++i) {
+                if (isSensor(SortedByDist[i])) {
+                    sparse_matrix[SortedByDist[i]][SortedByDist[i + 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
+                    connections[SortedByDist[i]] = SortedByDist[i + 1];
+                }
+            }
+        } else if (i > j && j < SortedByDist.length) {//der
+            for (; i > c; --i) {
+                if (isSensor(SortedByDist[i])) {
+                    sparse_matrix[SortedByDist[i]][SortedByDist[i - 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
+                    connections[SortedByDist[i]] = SortedByDist[i - 1];
+                }
+            }
+        }
+    }
+
+    private void fillSorted(int[] SortedByDist) {
+        Boolean visited[] = new Boolean[sens.size() + cds.size()];
+        Arrays.fill(visited, false);
+
+        int[] coords = new int[2];
+        SortedByDist[0] = findClosestAvailable(0, 0, visited);
+        visited[SortedByDist[0]] = true;
+        coords = getElemCoords(coords[0], coords[1], SortedByDist[0]);
+
+        for (int i = 1; i < sens.size() + cds.size(); ++i) {
+
+            SortedByDist[i] = findClosestAvailable(coords[0], coords[1], visited);
+            coords = getElemCoords(coords[0], coords[1], SortedByDist[i]);
+            visited[SortedByDist[i]] = true;
+        }
+    }
+
+    private int[] getElemCoords(int x, int y, int elem) {//pone en x e y las coordenadas del elmento, sea sens o cds.
+        int[] coords = new int[2];
+        if (isSensor(elem)) {
+            x = sens.get(elem).getCoordX();
+            y = sens.get(elem).getCoordY();
+        } else {
+            x = cds.get(elem - sens.size()).getCoordX();
+            y = cds.get(elem - sens.size()).getCoordY();
+        }
+        coords[0] = x;
+        coords[1] = y;
+        return coords;
+    }
+
+    private int findClosestAvailable(int x, int y, Boolean visited[]) {//dadas unas coordenadas, retorna el elemento mas cercano i free
+        // en caso de no haber elementos free, debuelve -1
+        double dist = Double.MAX_VALUE;
+        double min = Double.MAX_VALUE;
+        int elem = -1;
+        int[] coords = new int[2];
+        for (int i = 0; i < sens.size() + cds.size(); ++i) {
+            if (!visited[i]) { // and isAvailable
+                coords = getElemCoords(coords[0], coords[1], i);
+                dist = distance(x, y, coords[0], coords[1]);
+                if (dist < min) {
+                    min = dist;
+                    elem = i; //// mejor elem hasta ahora
+                }
+            }
+
+        }
+        return elem;
+    }
+
+    private Boolean isSensor(int elem) {//true => is Sesnor || false => is Center
+        if (elem < sens.size()) return true;
+        return false;
+    }
+
     private boolean centerIsFree(int j) {
         int n = 0;
         for (int i = 0; i < sparse_matrix.length; ++i) {
@@ -207,12 +303,12 @@ public class RedState {
     public boolean isSwappable(int i, int j) {
         return connections[j] != i && connections[i] != j && connections[j] != connections[i];
     }
+
     //SECOND Successor funcion
-    public boolean isAvailable(int i, int j) {
-        if(j < sens.size()){
+    public boolean isAvailable(int elem) {
+        if (isSensor(elem)) {
             //return SensIsFree(j) + 1 < 4
-        }
-        else{
+        } else {
             //return (SensIsFree(j) + 1) < 26
         }
         return true;

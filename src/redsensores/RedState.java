@@ -4,7 +4,6 @@ import IA.Red.CentrosDatos;
 import IA.Red.Sensores;
 
 import java.util.Arrays;
-import java.util.Random;
 
 import static java.lang.Math.*;
 
@@ -13,6 +12,7 @@ public class RedState {
 
     private static Sensores sens;
     private static CentrosDatos cds;
+    private static double total_Data;
 
     /*
         S1  S2  S3  S4  C1  C2
@@ -33,6 +33,7 @@ public class RedState {
 
         sens = new Sensores(nsens, seed);
         cds = new CentrosDatos(ncds, seed);
+        total_Data = 0;
 
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         connections = new int[sens.size()];
@@ -49,6 +50,7 @@ public class RedState {
 
         sens = oldState.getSens();
         cds = oldState.getCds();
+        total_Data = oldState.getTotal_Data();
 
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         for (int i = 0; i < sens.size(); ++i) {
@@ -129,6 +131,7 @@ public class RedState {
 
 
     // Operadores
+
     public void swap_connection(int i, int j) {
         int targetI, targetJ;
         targetI = connections[i];
@@ -146,7 +149,6 @@ public class RedState {
 
     // PRE: i & j < sens.size()
     // a connection hi ha el index del sensor desti, mentre a sparse_matrix hi ha la data que es transmet
-
     public void swapRaro(int i, int j) {
         int targetI, targetJ;
         targetI = connections[i];
@@ -163,6 +165,7 @@ public class RedState {
     }
 
     // otras funciones
+
     private void conectSorted(int[] SortedByDist) {
         int centersPos[] = new int[cds.size()];
         int c = 0;
@@ -206,7 +209,6 @@ public class RedState {
         }
 
     }
-
     private void conectGroup(int[] SortedByDist, int i, int j, int c) {//conecta en fila los sensores desde i a j, i el ultimo al centro c
         if (i < j) {//izq
             for (; i < c; ++i) {
@@ -300,11 +302,12 @@ public class RedState {
     }
 
     //First Successor funcion
+
     public boolean isSwappable(int i, int j) {
         return connections[j] != i && connections[i] != j && connections[j] != connections[i];
     }
-
     //SECOND Successor funcion
+
     public boolean isAvailable(int elem) {
         if (isSensor(elem)) {
             //return SensIsFree(j) + 1 < 4
@@ -317,7 +320,6 @@ public class RedState {
     /*public boolean isSwappableRaro(int i, int j) {
         return connections[j] != i && sensorIsFree(i);
     }*/
-
     public boolean isValid() {
 
         int[] arrivaAunCentre = new int[sens.size()];
@@ -361,7 +363,7 @@ public class RedState {
 
     public double recalculate_cost() {
 
-        double x = recalculate_data();
+        double x = data_received();
 
         double cost = 0;
         for (int i = 0; i < connections.length; ++i) {
@@ -398,7 +400,7 @@ public class RedState {
         return data + capX;
     }
 
-    public double recalculate_data() {
+    public double data_received() {
         double data = 0;
         int count;
         for (int i = 0; i < cds.size(); ++i) {
@@ -417,14 +419,26 @@ public class RedState {
         return data;
     }
 
-    // GETTERS
+    public double data_default(){
+        double count = 0;
+        for(int i = 0; i < sens.size(); ++i){
+            count += sens.get(i).getCapacidad();
+        }
+        return count;
+    }
 
+
+    // GETTERS
     public Sensores getSens() {
         return sens;
     }
 
     public CentrosDatos getCds() {
         return cds;
+    }
+
+    public double getTotal_Data() {
+        return total_Data;
     }
 
     public int[] getDataSent() {
@@ -467,7 +481,7 @@ public class RedState {
         }
         s.append("\n");
         s.append("Coste total: " + recalculate_cost() + "\n");
-        s.append("Datos transferidos: " + recalculate_data() + "\n");
+        s.append("Datos transferidos: " + data_received() + "\n");
         return s.toString();
     }
 }

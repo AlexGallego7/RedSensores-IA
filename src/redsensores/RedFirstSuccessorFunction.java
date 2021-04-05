@@ -19,18 +19,16 @@ public class RedFirstSuccessorFunction implements SuccessorFunction {
 
                 RedState newBoard = new RedState(board);
 
-                // isSwappable es el mismo que GDA.
+                // isSwappable para eficiencia.
                 if(newBoard.isSwappable(i, j)){
 
                     newBoard.swap_connection(i, j);
 
-                    //restriccion GDA + sensor llega a un centro directamente o inderectamente.
+                    //restricciones GDA + todos los sensores llega a un centro directamente o inderectamente.
                     if (newBoard.isValid()) {
 
                         double v = RHF.getHeuristicValue(newBoard);
                         String S = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
-
-                        //System.out.println(S);
 
                         retVal.add(new Successor(S, newBoard));
                     }

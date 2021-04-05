@@ -1,0 +1,24 @@
+-Carpeta "src/lib" las dos librerías necesarias para ejecutar el programa: AIMA.jar y redsonsores.jar
+-Carpeta "src/main" esta el Main.java, el ejecutable de la práctica.
+-Carpeta "src/redsensores" donde se encuentran todos las las clases implementadas por nosotros.
+-RedState.java es la clase que representa el estado.
+-RedFirstSuccessorFunction.java utiliza el operador Swap connections.
+-RedSecondSucessorFunction.java utiliza el operador Connect-To.
+
+--------------------------------------------------
+
+Opciones para ejecutar el programa:
+
+1r Montar el programa en Intellij Idea u otro IDE.
+
+2n Opción Ejecutar el .jar que esta en la carpeta "RedSensores-IA/out/artifacts/PracticaIA_jar"
+con "java -jar PracticaIA.jar" 
+
+--------------------------------------------------
+
+Para modificar los parámetros del Simulated Annealing hay que modificarlos
+manualmente através del archivo Main.java dentro de la carpeta "src/main" y
+ejecutar el Main.java con el IDE.
+
+
+Grupo: Alejandro Gallego, Kamal El Hachmi i Vladislav Lapin

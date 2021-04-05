@@ -1,0 +1,10 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="PracticaIA:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/PracticaIA_jar</output-path>
+    <root id="archive" name="PracticaIA.jar">
+      <element id="module-output" name="PracticaIA" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/lib/AIMA.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/src/lib/redsensores.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

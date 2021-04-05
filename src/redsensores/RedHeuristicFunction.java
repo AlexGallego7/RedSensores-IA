@@ -16,6 +16,6 @@ public class RedHeuristicFunction implements HeuristicFunction {
         Double maxCost, maxData;
         maxCost = board.getSens().size()*20000*board.getTotal_Data();
         maxData = board.getTotal_Data();
-        return (((board.recalculate_cost()*100)/maxCost) - ((board.data_recived()*100)/maxData));
+        return (((board.recalculate_cost()*100)/maxCost) -  ((board.data_recived()*100)/maxData));
     }
 }

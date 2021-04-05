@@ -204,7 +204,7 @@ public class RedState {
                     conectGroup(SortedByDist.length - 1, centersPos[c] + 1,centersPos[c]);//derecha
                 }
                 if(centersPos[c]  > 0){
-                    conectGroup(((centersPos[c] + centersPos[c - 1])/2) + 1, centersPos[c] - 1, centersPos[c]);//izq
+                    conectGroup(((centersPos[c] + centersPos[c - 1])/2), centersPos[c] - 1, centersPos[c]);//izq
                 }
             }
             else { // es un centro del medio
@@ -220,7 +220,7 @@ public class RedState {
 
     }
     private void conectGroup(int i, int j, int c){//conecta en fila los sensores desde i a j, i el ultimo al centro c
-        if (i < j) {//izq
+        if (i <= j) {//izq
             for (; i < c; ++i) {
                 if(isSensor(SortedByDist[i])) {
                     sparse_matrix[SortedByDist[i]][SortedByDist[i + 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
@@ -228,7 +228,7 @@ public class RedState {
                 }
             }
         }
-        else if (i > j && j < SortedByDist.length){//der
+        else if (i >= j && j < SortedByDist.length){//der
             for (; i > c; --i) {
                 if(isSensor(SortedByDist[i])) {
                     sparse_matrix[SortedByDist[i]][SortedByDist[i - 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();

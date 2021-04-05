@@ -15,12 +15,12 @@ public class RedFirstSuccessorFunction implements SuccessorFunction {
 
         for (int i = 0; i < board.getSens().size(); i++) {
 
-            for (int j = i+1; j < board.getSens().size(); j++) {
+            for (int j = i + 1; j < board.getSens().size(); j++) {
 
                 RedState newBoard = new RedState(board);
 
                 // isSwappable para eficiencia.
-                if(newBoard.isSwappable(i, j)){
+                if (newBoard.isSwappable(i, j)) {
 
                     newBoard.swap_connection(i, j);
 

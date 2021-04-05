@@ -14,16 +14,6 @@ public class RedState {
     private static CentrosDatos cds;
     private static double total_Data;
 
-    /*
-        S1  S2  S3  S4  C1  C2
-    S1  0   1   0   0   0   0
-    S2  ...
-    S3
-    S4
-     */
-
-    private int[][] sparse_matrix;
-
     private int[] connections;
 
     private int[] dataSent;
@@ -35,7 +25,6 @@ public class RedState {
         cds = new CentrosDatos(ncds, seed);
         total_Data = data_default();
 
-        sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         connections = new int[sens.size()];
         Arrays.fill(connections, -1);
         dataSent = new int[sens.size()];
@@ -53,10 +42,6 @@ public class RedState {
         cds = oldState.getCds();
         total_Data = oldState.getTotal_Data();
 
-        sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
-        for (int i = 0; i < sens.size(); ++i) {
-            sparse_matrix[i] = oldState.sparse_matrix[i].clone();
-        }
         connections = oldState.getConnections().clone();
         dataSent = oldState.getDataSent().clone();
 
@@ -71,16 +56,13 @@ public class RedState {
             boolean collocated = false;
             for (int j = 0; !collocated && j < cds.size(); ++j) {
                 if (centerConnections(j) < 25) {
-                    sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
-
                     collocated = true;
                 }
             }
             if (!collocated) {
                 for (int j = 0; j < sens.size() && !collocated; ++j) {
                     if (sensorConnections(j) < 3 && j != i) {
-                        sparse_matrix[i][j] = (int) sens.get(i).getCapacidad();
                         connections[i] = j;
                         collocated = true;
                     }
@@ -95,7 +77,6 @@ public class RedState {
             boolean collocated = false;
             for (int j = 0; !collocated && j < cds.size(); ++j) {
                 if (centerConnections(j) < 25) {
-                    sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
 
                     collocated = true;
@@ -107,7 +88,6 @@ public class RedState {
                     collocated = false;
                     for (int j = 0; j < sens.size() && !collocated; ++j) {
                         if (sensorConnections(j) < 3 && j != k) {
-                            sparse_matrix[k][j] = (int) sens.get(k).getCapacidad();
                             connections[k] = j;
                             collocated = true;
                         }
@@ -115,7 +95,6 @@ public class RedState {
                 }
             } else {
                 for (int j = i + 1; j < sens.size() && j < i + 4; ++j) {
-                    sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
                     connections[j] = i;
                 }
             }
@@ -130,50 +109,18 @@ public class RedState {
         conectSorted(SortedByDist);
     }
 
-
     // Operadores
 
     public void swap_connection(int i, int j) {
         //PRE: i & j < sens.size()
-        int targetI, targetJ;
-        targetI = connections[i];
-        targetJ = connections[j];
+        int targetI = connections[i];
 
-        connections[i] = targetJ;
+        connections[i] = connections[j];
         connections[j] = targetI;
-
-        sparse_matrix[i][targetI] = 0;
-        sparse_matrix[i][targetJ] = (int) sens.get(i).getCapacidad();
-
-        sparse_matrix[j][targetJ] = 0;
-        sparse_matrix[j][targetI] = (int) sens.get(j).getCapacidad();
     }
 
     public void connectTo(int i, int j) {
-        int targetI = connections[i];
-
         connections[i] = j;
-
-        sparse_matrix[i][targetI] = 0;
-        sparse_matrix[i][j] = (int) sens.get(i).getCapacidad();
-
-    }
-
-    // PRE: i & j < sens.size()
-    // a connection hi ha el index del sensor desti, mentre a sparse_matrix hi ha la data que es transmet
-    public void swapRaro(int i, int j) {
-        int targetI, targetJ;
-        targetI = connections[i];
-        targetJ = connections[j];
-
-        connections[i] = targetJ;
-        connections[j] = i;
-
-        sparse_matrix[i][targetI] = 0;
-        sparse_matrix[i][targetJ] = (int) sens.get(i).getCapacidad();
-
-        sparse_matrix[j][targetJ] = 0;
-        sparse_matrix[j][i] = (int) sens.get(j).getCapacidad();
     }
 
     // otras funciones
@@ -226,14 +173,12 @@ public class RedState {
         if (i < j) {//izq
             for (; i < c; ++i) {
                 if (isSensor(SortedByDist[i])) {
-                    sparse_matrix[SortedByDist[i]][SortedByDist[i + 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
                     connections[SortedByDist[i]] = SortedByDist[i + 1];
                 }
             }
         } else if (i > j && j < SortedByDist.length) {//der
             for (; i > c; --i) {
                 if (isSensor(SortedByDist[i])) {
-                    sparse_matrix[SortedByDist[i]][SortedByDist[i - 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
                     connections[SortedByDist[i]] = SortedByDist[i - 1];
                 }
             }
@@ -328,7 +273,7 @@ public class RedState {
     }
 
     public boolean TwoSensGDA(int i, int j) {
-        if(j < sens.size()) return connections[j] != i;
+        if (j < sens.size()) return connections[j] != i;
         return true;
     }
 
@@ -461,10 +406,6 @@ public class RedState {
         return dataSent;
     }
 
-    public int[][] getSparse_matrix() {
-        return sparse_matrix;
-    }
-
     public int[] getConnections() {
         return connections;
     }
@@ -474,6 +415,7 @@ public class RedState {
     @Override
     public String toString() {
         StringBuilder s = new StringBuilder();
+        double x = data_received();
 
         s.append("  ");
         for (int i = 0; i < sens.size(); ++i)
@@ -483,10 +425,11 @@ public class RedState {
 
         s.append("\n");
 
-        for (int i = 0; i < sparse_matrix.length; ++i) {
+        for (int i = 0; i < sens.size(); ++i) {
             s.append("S" + i + " ");
-            for (int j = 0; j < sparse_matrix[0].length; ++j) {
-                s.append(sparse_matrix[i][j] + "  ");
+            for (int j = 0; j < sens.size() + cds.size(); ++j) {
+                if (connections[i] == j) s.append(dataSent[i] + "  ");
+                else s.append(0 + "  ");
             }
             s.append("\n");
         }
@@ -497,7 +440,7 @@ public class RedState {
         }
         s.append("\n");
         s.append("Coste total: " + recalculate_cost() + "\n");
-        s.append("Datos transferidos: " + data_received() + "\n");
+        s.append("Datos transferidos: " + x + "\n");
         return s.toString();
     }
 }

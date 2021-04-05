@@ -7,16 +7,11 @@ import static java.lang.Math.pow;
 public class RedHeuristicFunction implements HeuristicFunction {
     @Override
     public double getHeuristicValue(Object state) {//sumamos el coste total + la perdida de datos
+
         RedState board = (RedState) state;
-        double cost, recived;
-        cost = board.recalculate_cost();
-        recived = board.data_received();
-
-        int lenghtCost = String.valueOf(cost).length();
-        int lenghtRecived= String.valueOf(recived).length();
-        int lenghtTotal = String.valueOf(board.getTotal_Data()).length();
-
-        //data enviada por sensores - data recivida
-        return -(cost - recived*(pow(10,lenghtCost - lenghtRecived)));
+        Double maxCost, maxData;
+        maxCost = board.getSens().size()*20000*board.getTotal_Data();
+        maxData = board.getTotal_Data();
+        return (((board.recalculate_cost()*100)/maxCost) - ((board.data_received()*100)/maxData));
     }
 }

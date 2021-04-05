@@ -14,17 +14,17 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        RedState board = new RedState(50, 1, 1, 1);
+        RedState board = new RedState(25, 1, 1, 2);
         System.out.println(board);
         RedSensorHillClimbingSearch(board);
-        //RedSimulatedAnnealingSearch(board);
+        RedSimulatedAnnealingSearch(board);
 
     }
 
     private static void RedSensorHillClimbingSearch(RedState board) {
         System.out.println("\nTSP HillClimbing  -->");
         try {
-            Problem problem = new Problem(board, new RedFirstSuccessorFunction(), new RedGoalTest(), new RedHeuristicFunction());
+            Problem problem = new Problem(board, new RedSecondSuccessorFunction(), new RedGoalTest(), new RedHeuristicFunction());
             Search search = new HillClimbingSearch();
             SearchAgent agent = new SearchAgent(problem, search);
 
@@ -39,9 +39,9 @@ public class Main {
     private static void RedSimulatedAnnealingSearch(RedState board) {
         System.out.println("\nTSP Simulated Annealing  -->");
         try {
-            Problem problem = new Problem(board, new RedSuccessorFunctionSA(), new RedGoalTest(), new RedHeuristicFunction());
+            Problem problem = new Problem(board, new RedSecondSuccessorFunctionSA(), new RedGoalTest(), new RedHeuristicFunction());
             SimulatedAnnealingSearch search = new SimulatedAnnealingSearch(2000, 100, 5, 0.001);
-            search.traceOn();
+            //search.traceOn();
             SearchAgent agent = new SearchAgent(problem, search);
 
             System.out.println();

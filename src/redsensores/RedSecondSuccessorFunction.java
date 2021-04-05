@@ -23,24 +23,20 @@ public class RedSecondSuccessorFunction implements SuccessorFunction {
 
                     RedState newBoard = new RedState(board);
 
-                    // isSwappable es el mismo que GDA.
-                    if (newBoard.isAvailable(j)) {
+                    newBoard.connectTo(i, j);
 
-                        newBoard.connectTo(i, j);
+                    //restriccion GDA + sensor llega a un centro directamente o inderectamente.
+                    if (newBoard.isValid()) {
 
-                        //restriccion GDA + sensor llega a un centro directamente o inderectamente.
-                        if (newBoard.isValid()) {
-
-                            double v = RHF.getHeuristicValue(newBoard);
-                            String S;
-                            if (j < board.getSens().size()) {
-                                S = "---> Enviar " + i + " al Sensor " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
-                            } else {
-                                S = "---> Enviar " + i + " al Centro " + (j - board.getSens().size()) + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
-                            }
-                            //System.out.println(S);
-                            retVal.add(new Successor(S, newBoard));
+                        double v = RHF.getHeuristicValue(newBoard);
+                        String S;
+                        if (j < board.getSens().size()) {
+                            S = "---> Enviar " + i + " al Sensor " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
+                        } else {
+                            S = "---> Enviar " + i + " al Centro " + (j - board.getSens().size()) + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
                         }
+                        //System.out.println(S);
+                        retVal.add(new Successor(S, newBoard));
                     }
                 }
             }

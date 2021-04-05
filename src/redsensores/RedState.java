@@ -15,6 +15,7 @@ public class RedState {
     private static Sensores sens;
     private static CentrosDatos cds;
     private static int[] SortedByDist;
+    private static double total_Data;
 
         /*
 
@@ -36,7 +37,7 @@ public class RedState {
 
         sens = new Sensores(nsens, seed);
         cds = new CentrosDatos(ncds, seed);
-
+        total_Data = data_default();
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         connections = new int[sens.size()];
         dataSent = new int[sens.size()];
@@ -54,6 +55,7 @@ public class RedState {
 
         sens = oldState.getSens();
         cds = oldState.getCds();
+        total_Data = oldState.getTotal_Data();
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         for (int i = 0; i < sens.size(); ++i) {
             sparse_matrix[i] = oldState.sparse_matrix[i].clone();
@@ -454,6 +456,16 @@ public class RedState {
 
     public int[][] getSparse_matrix() {
         return sparse_matrix;
+    }
+    public double getTotal_Data() {
+        return total_Data;
+    }
+    public double data_default(){
+        double count = 0;
+        for(int i = 0; i < sens.size(); ++i){
+            count += sens.get(i).getCapacidad();
+        }
+        return count;
     }
 
     public int[] getConnections() {

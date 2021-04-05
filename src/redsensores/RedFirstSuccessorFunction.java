@@ -30,6 +30,7 @@ public class RedFirstSuccessorFunction implements SuccessorFunction {
                         double v = RHF.getHeuristicValue(newBoard);
                         String S = "---> Intercambio " + i + " " + j + " HEURISTICA: " + v + " <--- " + "\n" + newBoard.toString();
 
+                        //System.out.println(S);
                         retVal.add(new Successor(S, newBoard));
                     }
                 }

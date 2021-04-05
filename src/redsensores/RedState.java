@@ -33,10 +33,11 @@ public class RedState {
 
         sens = new Sensores(nsens, seed);
         cds = new CentrosDatos(ncds, seed);
-        total_Data = 0;
+        total_Data = data_default();
 
         sparse_matrix = new int[sens.size()][sens.size() + cds.size()];
         connections = new int[sens.size()];
+        Arrays.fill(connections, -1);
         dataSent = new int[sens.size()];
 
         switch (option) {
@@ -69,7 +70,7 @@ public class RedState {
         for (int i = 0; i < nsens; ++i) {
             boolean collocated = false;
             for (int j = 0; !collocated && j < cds.size(); ++j) {
-                if (centerIsFree(j)) {
+                if (centerConnections(j) < 25) {
                     sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
 
@@ -78,7 +79,7 @@ public class RedState {
             }
             if (!collocated) {
                 for (int j = 0; j < sens.size() && !collocated; ++j) {
-                    if (sensorIsFree(j) && j != i) {
+                    if (sensorConnections(j) < 3 && j != i) {
                         sparse_matrix[i][j] = (int) sens.get(i).getCapacidad();
                         connections[i] = j;
                         collocated = true;
@@ -93,7 +94,7 @@ public class RedState {
         for (int i = 0; i < sens.size() && !fi; i += 4) {
             boolean collocated = false;
             for (int j = 0; !collocated && j < cds.size(); ++j) {
-                if (centerIsFree(j)) {
+                if (centerConnections(j) < 25) {
                     sparse_matrix[i][sens.size() + j] = (int) sens.get(i).getCapacidad();
                     connections[i] = sens.size() + j;
 
@@ -105,7 +106,7 @@ public class RedState {
                 for (int k = i; k < sens.size(); ++k) {
                     collocated = false;
                     for (int j = 0; j < sens.size() && !collocated; ++j) {
-                        if (sensorIsFree(j) && j != k) {
+                        if (sensorConnections(j) < 3 && j != k) {
                             sparse_matrix[k][j] = (int) sens.get(k).getCapacidad();
                             connections[k] = j;
                             collocated = true;
@@ -133,6 +134,7 @@ public class RedState {
     // Operadores
 
     public void swap_connection(int i, int j) {
+        //PRE: i & j < sens.size()
         int targetI, targetJ;
         targetI = connections[i];
         targetJ = connections[j];
@@ -145,6 +147,16 @@ public class RedState {
 
         sparse_matrix[j][targetJ] = 0;
         sparse_matrix[j][targetI] = (int) sens.get(j).getCapacidad();
+    }
+
+    public void connectTo(int i, int j) {
+        int targetI = connections[i];
+
+        connections[i] = j;
+
+        sparse_matrix[i][targetI] = 0;
+        sparse_matrix[i][j] = (int) sens.get(i).getCapacidad();
+
     }
 
     // PRE: i & j < sens.size()
@@ -209,6 +221,7 @@ public class RedState {
         }
 
     }
+
     private void conectGroup(int[] SortedByDist, int i, int j, int c) {//conecta en fila los sensores desde i a j, i el ultimo al centro c
         if (i < j) {//izq
             for (; i < c; ++i) {
@@ -283,43 +296,46 @@ public class RedState {
         return false;
     }
 
-    private boolean centerIsFree(int j) {
+    private int centerConnections(int j) {
         int n = 0;
-        for (int i = 0; i < sparse_matrix.length; ++i) {
-            if (sparse_matrix[i][sens.size() + j] > 0) ++n;
-            if (n >= 25) return false;
+        j = j + sens.size();
+        for (int i = 0; i < connections.length; ++i) {
+            if (connections[i] == j) ++n;
         }
-        return true;
+        return n;
     }
 
-    private boolean sensorIsFree(int j) {
+    private int sensorConnections(int j) {
         int n = 0;
-        for (int i = 0; i < sparse_matrix.length; ++i) {
-            if (sparse_matrix[i][j] > 0) ++n;
-            if (n >= 3) return false;
+        for (int i = 0; i < connections.length; ++i) {
+            if (connections[i] == j) ++n;
         }
-        return true;
+        return n;
     }
-
     //First Successor funcion
 
     public boolean isSwappable(int i, int j) {
         return connections[j] != i && connections[i] != j && connections[j] != connections[i];
     }
-    //SECOND Successor funcion
 
+    //SECOND Successor funcion, comprueba que el sensor o centro objectivo no este lleno
     public boolean isAvailable(int elem) {
         if (isSensor(elem)) {
-            //return SensIsFree(j) + 1 < 4
+            return sensorConnections(elem) < 3;
         } else {
-            //return (SensIsFree(j) + 1) < 26
+            return centerConnections(elem) < 25;
         }
+    }
+
+    public boolean TwoSensGDA(int i, int j) {
+        if(j < sens.size()) return connections[j] != i;
         return true;
     }
 
     /*public boolean isSwappableRaro(int i, int j) {
         return connections[j] != i && sensorIsFree(i);
     }*/
+
     public boolean isValid() {
 
         int[] arrivaAunCentre = new int[sens.size()];
@@ -419,16 +435,16 @@ public class RedState {
         return data;
     }
 
-    public double data_default(){
+    public double data_default() {
         double count = 0;
-        for(int i = 0; i < sens.size(); ++i){
+        for (int i = 0; i < sens.size(); ++i) {
             count += sens.get(i).getCapacidad();
         }
         return count;
     }
 
-
     // GETTERS
+
     public Sensores getSens() {
         return sens;
     }

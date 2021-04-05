@@ -14,10 +14,10 @@ import java.util.Properties;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        RedState board = new RedState(25, 1, 1, 2);
+        RedState board = new RedState(100, 4, 1234, 3);
         System.out.println(board);
         RedSensorHillClimbingSearch(board);
-        RedSimulatedAnnealingSearch(board);
+        //RedSimulatedAnnealingSearch(board);
 
     }
 

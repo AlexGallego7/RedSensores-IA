@@ -101,8 +101,8 @@ public class RedState {
         }
     }
 
+    //cada sensor envia a su punto mas cercano available, assegurando el que todas las conexiones llegan a un centro
     private void initial_solution_efficient() {
-
         int[] SortedByDist = new int[sens.size() + cds.size()];
 
         fillSorted(SortedByDist);
@@ -124,7 +124,6 @@ public class RedState {
     }
 
     // otras funciones
-
     private void conectSorted(int[] SortedByDist) {
         int centersPos[] = new int[cds.size()];
         int c = 0;
@@ -154,7 +153,7 @@ public class RedState {
                     conectGroup(SortedByDist, SortedByDist.length - 1, centersPos[c] + 1, centersPos[c]);//derecha
                 }
                 if (centersPos[c] > 0) {
-                    conectGroup(SortedByDist, ((centersPos[c] + centersPos[c - 1]) / 2) + 1, centersPos[c] - 1, centersPos[c]);//izq
+                    conectGroup(SortedByDist, ((centersPos[c] + centersPos[c - 1]) / 2), centersPos[c] - 1, centersPos[c]);//izq
                 }
             } else { // es un centro del medio
                 if (centersPos[c] > 0) {
@@ -170,15 +169,17 @@ public class RedState {
     }
 
     private void conectGroup(int[] SortedByDist, int i, int j, int c) {//conecta en fila los sensores desde i a j, i el ultimo al centro c
-        if (i < j) {//izq
+        if (i <= j) {//izq
             for (; i < c; ++i) {
                 if (isSensor(SortedByDist[i])) {
+                    //sparse_matrix[SortedByDist[i]][SortedByDist[i + 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
                     connections[SortedByDist[i]] = SortedByDist[i + 1];
                 }
             }
-        } else if (i > j && j < SortedByDist.length) {//der
+        } else if (i >= j && j < SortedByDist.length) {//der
             for (; i > c; --i) {
                 if (isSensor(SortedByDist[i])) {
+                    //sparse_matrix[SortedByDist[i]][SortedByDist[i - 1]] = (int) sens.get(SortedByDist[i]).getCapacidad();
                     connections[SortedByDist[i]] = SortedByDist[i - 1];
                 }
             }
